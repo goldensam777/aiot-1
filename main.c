@@ -34,32 +34,25 @@ const char* getStateName(SystemState s) {
 
 int main() {
     printf("--- SIMULATION IOT DEMARREE ---\n");
-    int cycle_de_simulation=0;
-    cycle_de_simulation = 100;
-    int compteur_state_error = 0;
-
+    int cycle_de_simulation=100;
+    unsigned long int state_error_count=0;
     while (true) {
         // A. LOGIQUE DE TRANSITION (Le Cerveau)
         // TODO: Coder ici le changement d'état automatique (ex: après 100 ticks)
         if (globalTick>0 && globalTick % cycle_de_simulation == 0){
-            if (compteur_state_error <2)
-                    compteur_state_error=0;
             // Doit suivre le modèle: Commencer avec STARTUP, puis NORMAL -> WARNING -> ERROR -> NORMAL ...
-            switch (currentState)
-            {
-            case STATE_STARTUP:
-                currentState = STATE_NORMAL;
-                break;
-            case STATE_NORMAL:
-                currentState = STATE_WARNING;
-                break;
-            case STATE_WARNING:
-                currentState = STATE_ERROR;
-                break;
-            case STATE_ERROR:
-            currentState = STATE_NORMAL;
-            default:
-                break;
+            switch (currentState){
+                case STATE_NORMAL:
+                    currentState = STATE_WARNING;
+                    break;
+                case STATE_WARNING:
+                    state_error_count=0;
+                    currentState = STATE_ERROR;
+                    break;
+                case STATE_ERROR:
+                    currentState = STATE_NORMAL;
+                default:
+                    break;
             }
         }
         // B. LOGIQUE D'AFFICHAGE (La LED)
@@ -68,6 +61,10 @@ int main() {
         switch (currentState) {
             case STATE_STARTUP:
                 // TODO: Logique de clignotement STARTUP: 3 clignotements rapides, puis passage à NORMAL
+                if (globalTick<7)
+                    ledState = (globalTick%2);
+                else
+                    currentState=STATE_NORMAL;
                 break;
             case STATE_NORMAL:
                 // TODO: Logique de clignotement NORMAL
@@ -81,7 +78,7 @@ int main() {
             case STATE_WARNING:
                 // TODO: Logique WARNING
                 // Clignotement rapide continu
-                if (globalTick%10 == 2)
+                if (globalTick%5 == 0)
                     ledState = true;
                 else
                     ledState= false;
@@ -90,7 +87,12 @@ int main() {
             case STATE_ERROR:
                 // TODO: Logique ERROR
                 // 2 clignotements rapides + pause
-                compteur_state_error++;
+                if (state_error_count<4){
+                    ledState = (state_error_count%2);
+                    state_error_count++;
+                }
+                else
+                    ledState= false;
                 break;
         }
 
