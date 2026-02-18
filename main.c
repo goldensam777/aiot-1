@@ -32,16 +32,20 @@ const char* getStateName(SystemState s) {
     }
 }
 
+
 int main() {
     printf("--- SIMULATION IOT DEMARREE ---\n");
-    int cycle_de_simulation=100;
     unsigned long int state_error_count=0;
     while (true) {
+        const int cycle_de_simulation=100;
         // A. LOGIQUE DE TRANSITION (Le Cerveau)
         // TODO: Coder ici le changement d'état automatique (ex: après 100 ticks)
         if (globalTick>0 && globalTick % cycle_de_simulation == 0){
             // Doit suivre le modèle: Commencer avec STARTUP, puis NORMAL -> WARNING -> ERROR -> NORMAL ...
             switch (currentState){
+                case STATE_STARTUP:
+                    currentState = STATE_NORMAL;
+                    break;
                 case STATE_NORMAL:
                     currentState = STATE_WARNING;
                     break;
@@ -50,7 +54,9 @@ int main() {
                     currentState = STATE_ERROR;
                     break;
                 case STATE_ERROR:
+                    state_error_count = 0;
                     currentState = STATE_NORMAL;
+                    break;
                 default:
                     break;
             }
@@ -87,12 +93,18 @@ int main() {
             case STATE_ERROR:
                 // TODO: Logique ERROR
                 // 2 clignotements rapides + pause
-                if (state_error_count<4){
-                    ledState = (state_error_count%2);
+                if (state_error_count < 4){
+                    ledState = (state_error_count % 2);
                     state_error_count++;
                 }
-                else
-                    ledState= false;
+                else {
+                    ledState = false;
+                    if (state_error_count >= 10) {
+                        state_error_count = 0;
+                    } else {
+                        state_error_count++;
+                    }
+                }
                 break;
         }
 
